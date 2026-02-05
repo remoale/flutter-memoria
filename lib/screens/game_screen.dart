@@ -62,6 +62,8 @@ class _GameScreenState extends State<GameScreen> {
       secondCard!.isMatched = true;
       score += 10;
 
+      _saveHighScore();
+
       if (cards.every((card) => card.isMatched)) {
         _saveHighScore();
       }
@@ -115,6 +117,8 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _resetGame() {
+    _saveHighScore();
+    
     setState(() {
     attempts = 0;
     score = 0;
