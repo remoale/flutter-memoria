@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/memory_card.dart';
 
 class GameScreen extends StatefulWidget {
@@ -14,6 +15,28 @@ class _GameScreenState extends State<GameScreen> {
   MemoryCard? secondCard;
   bool isBusy = false;
   int attempts = 0;
+  int highScore = 0;
+
+  void _loadHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      highScore = prefs.getInt('highScore') ?? 0;
+    });
+  }
+
+  void _saveHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (highScore == 0 || attempts < highScore) {
+      await prefs.setInt('highScore', attempts);
+      setState(() {
+        highScore = attempts;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('¡Nuevo Récord Local!')),
+      );
+    }
+  }
+
 
   void _onCardTap(MemoryCard card) {
     if (card.isFaceUp || card.isMatched || isBusy) return;
@@ -37,6 +60,9 @@ class _GameScreenState extends State<GameScreen> {
     if (firstCard!.icon == secondCard!.icon) {
       firstCard!.isMatched = true;
       secondCard!.isMatched = true;
+      if (cards.every((card) => card.isMatched)) {
+        _saveHighScore();
+      }
       _resetTurn();
     } else {
       await Future.delayed(const Duration(seconds: 1));
@@ -59,6 +85,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    _loadHighScore();
     _generateCards();
   }
 
@@ -114,6 +141,8 @@ Widget build(BuildContext context) {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _infoCard("Intentos", "$attempts"),
+              const SizedBox(width: 20),
+              _infoCard("Récord", highScore == 0 ? "-" : "$highScore"),
             ],
           ),
         ),
