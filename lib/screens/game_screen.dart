@@ -83,28 +83,69 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _resetGame() {
+  setState(() {
+    attempts = 0;
+    firstCard = null;
+    secondCard = null;
+    isBusy = false;
+    _generateCards(); 
+  });
+  }
+
 @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Juego de Memoria")),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GridView.builder(
-            itemCount: cards.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6, 
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemBuilder: (context, index) {
-              return _buildCard(cards[index]);
-            },
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text("Memoria UNIMET"),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _resetGame, 
+          tooltip: "Reiniciar Juego",
+        ),
+      ],
+    ),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _infoCard("Intentos", "$attempts"),
+            ],
           ),
         ),
-      ),
-    );
-  }
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: GridView.builder(
+              itemCount: cards.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 6,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                return _buildCard(cards[index]);
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _infoCard(String label, String value) {
+  return Column(
+    children: [
+      Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+      Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+    ],
+  );
+}
 
   Widget _buildCard(MemoryCard card) {
     return InkWell(
