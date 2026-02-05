@@ -15,6 +15,7 @@ class _GameScreenState extends State<GameScreen> {
   MemoryCard? secondCard;
   bool isBusy = false;
   int attempts = 0;
+  int score = 0;
   int highScore = 0;
 
   void _loadHighScore() async {
@@ -26,16 +27,15 @@ class _GameScreenState extends State<GameScreen> {
 
   void _saveHighScore() async {
     final prefs = await SharedPreferences.getInstance();
-    if (highScore == 0 || attempts < highScore) {
-      await prefs.setInt('highScore', attempts);
-      setState(() {
-        highScore = attempts;
-      });
+    if (score > highScore) {
+      await prefs.setInt('highScore', score);
+      setState(() => highScore = score);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('¡Nuevo Récord Local!')),
       );
     }
   }
+
 
 
   void _onCardTap(MemoryCard card) {
@@ -60,11 +60,15 @@ class _GameScreenState extends State<GameScreen> {
     if (firstCard!.icon == secondCard!.icon) {
       firstCard!.isMatched = true;
       secondCard!.isMatched = true;
+      score += 10;
+
       if (cards.every((card) => card.isMatched)) {
         _saveHighScore();
       }
       _resetTurn();
     } else {
+      score = (score - 2).clamp(0, 999999);
+
       await Future.delayed(const Duration(seconds: 1));
       setState(() {
         firstCard!.isFaceUp = false;
@@ -111,12 +115,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _resetGame() {
-  setState(() {
+    setState(() {
     attempts = 0;
+    score = 0;
     firstCard = null;
     secondCard = null;
     isBusy = false;
-    _generateCards(); 
+    _generateCards();
   });
   }
 
@@ -140,9 +145,9 @@ Widget build(BuildContext context) {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
+              _infoCard("Puntaje", "$score"),
+              _infoCard("Récord", "$highScore"),
               _infoCard("Intentos", "$attempts"),
-              const SizedBox(width: 20),
-              _infoCard("Récord", highScore == 0 ? "-" : "$highScore"),
             ],
           ),
         ),
