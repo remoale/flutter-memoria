@@ -10,6 +10,51 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   List<MemoryCard> cards = [];
+  MemoryCard? firstCard;
+  MemoryCard? secondCard;
+  bool isBusy = false;
+  int attempts = 0;
+
+  void _onCardTap(MemoryCard card) {
+    if (card.isFaceUp || card.isMatched || isBusy) return;
+
+    setState(() {
+      card.isFaceUp = true;
+
+      if (firstCard == null) {
+        firstCard = card;
+      } else {
+        secondCard = card;
+        _checkMatch();
+      }
+    });
+  }
+
+  void _checkMatch() async {
+    isBusy = true;
+    attempts++;
+
+    if (firstCard!.icon == secondCard!.icon) {
+      firstCard!.isMatched = true;
+      secondCard!.isMatched = true;
+      _resetTurn();
+    } else {
+      await Future.delayed(const Duration(seconds: 1));
+      setState(() {
+        firstCard!.isFaceUp = false;
+        secondCard!.isFaceUp = false;
+      });
+      _resetTurn();
+    }
+  }
+
+  void _resetTurn() {
+    setState(() {
+      firstCard = null;
+      secondCard = null;
+      isBusy = false;
+    });
+  }
 
   @override
   void initState() {
@@ -61,24 +106,19 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-Widget _buildCard(MemoryCard card) {
-    return InkWell( // [cite: 58]
-      onTap: () {
-        setState(() {
-          card.isFaceUp = !card.isFaceUp; 
-        });
-      },
+  Widget _buildCard(MemoryCard card) {
+    return InkWell(
+      onTap: () => _onCardTap(card),
       child: Container(
         decoration: BoxDecoration(
           color: card.isFaceUp || card.isMatched ? Colors.white : Colors.blue,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.blueAccent),
         ),
         child: Center(
           child: Icon(
             card.isFaceUp || card.isMatched ? card.icon : Icons.help_outline,
-            color: card.isFaceUp || card.isMatched ? Colors.blue : Colors.white,
             size: 30,
+            color: card.isFaceUp || card.isMatched ? Colors.blue : Colors.white,
           ),
         ),
       ),
